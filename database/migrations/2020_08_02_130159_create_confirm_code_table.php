@@ -16,9 +16,11 @@ class CreateConfirmCodeTable extends Migration
         Schema::create('confirm_code', function (Blueprint $table) {
             $table->id();
             $table->string('code')->comment('Код активации');
-            $table->boolean('active')->comment('Активный?');
+            $table->boolean('is_active')->default(true)->comment('Активный?');
             $table->timestamp('valid_to')->comment('Дествителен до');
             $table->timestamps();
+
+            $table->foreignId('object_id')->constrained('confirm_object');
         });
     }
 

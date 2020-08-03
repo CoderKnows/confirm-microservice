@@ -21,8 +21,6 @@ class CreateConfirmObjectTable extends Migration
             $table->integer('send_count')->default(0)->comment('Количество отправок кода');
             $table->integer('try_count')->default(0)->comment('Количество попыток');
             $table->timestamps();
-
-            $table->foreignId('object_id')->constrained('confirm_object');
         });
     }
 
