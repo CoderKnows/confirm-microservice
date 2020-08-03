@@ -46,36 +46,63 @@ class ConfirmService
         $code = $object
             ->codes()
             ->where('is_active', '=', true)
-            ->whereDate('valid_to', '>', new \DateTime())
+            ->whereDate('created_at', '>', (new \DateTime())->sub(new \DateInterval('PT300S')))
             ->firstOrNew([]);
 
         if (!$code->id) {
             $code->code = $this->generateCode();
-            $code->valid_to = (new \DateTime())->add(new \DateInterval('PT300S'));
             $code->save();
         }
+
+        $object
+            ->codes()
+            ->where('id', '!=', $code->id)
+            ->update(['is_active' => false])
+        ;
 
         return $code;
     }
 
     public function getVerifyingService($queryData)
     {
+        // @todo перенести в фабрики
         if (Arr::exists($queryData, 'email')) {
             /** @var EmailService $service */
             $service = app()->get(EmailService::class);
             $object = $this->getObject(Arr::get($queryData, 'email'), ConfirmType::EMAIL);
+            $this->validate($object);
             $code = $this->getCode($object);
             $service->setObject($object);
             $service->setCode($code);
             return $service;
         }
 
-        return null;
+        throw new \Exception('Не найден способ потверждения');
     }
 
-    public function forConfirming($queryData)
+    /**
+     * @param Confirm $object
+     * @throws \Exception
+     */
+    protected function validate($object)
     {
-        return Arr::has($queryData, 'code');
+        // не больше 5 в течение часа
+        $count = $object->codes()
+            ->whereDate('created_at', '<=', (new \DateTime())->add(new \DateInterval('PT1H')))
+            ->count();
+        ;
+        if ($count > 5) {
+            throw new \Exception('Превышен лимит запросов кода');
+        }
+
+        // Код не чаще 1 раза в 5 минут
+        $lastCode = $object->codes()->latest()->first();
+        if ($lastCode) {
+            $timeLater = time() - $lastCode->created_at->timestamp;
+            if ($timeLater < Code::LIFETIME) {
+                throw new \Exception(sprintf('Код можно будет запросить через %d сек.', (Code::LIFETIME - $timeLater)));
+            }
+        }
     }
 
     public function confirm($queryData)

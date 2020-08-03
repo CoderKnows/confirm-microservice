@@ -11,4 +11,5 @@
 |
 */
 
-$router->get('/sendCode', 'ConfirmController@sendCode');
+$router->get('/sendCode', ['as' => 'sendCode', 'uses' =>'ConfirmController@sendCode']);
+$router->get('/checkCode', ['as' => 'checkCode', 'uses' =>'ConfirmController@checkCode']);

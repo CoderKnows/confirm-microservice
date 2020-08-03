@@ -11,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property integer $id
  * @property string $code
  * @property boolean $is_active
- * @property integer $valid_to
  * @property integer $created_at
  * @property integer $updated_at
  *

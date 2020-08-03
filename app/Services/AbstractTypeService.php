@@ -2,9 +2,15 @@
 
 namespace App\Services;
 
+use App\Code;
+use App\Confirm;
+
 abstract class AbstractTypeService
 {
+    /** @var Confirm */
     protected $object;
+
+    /** @var Code */
     protected $code;
 
     public function setObject($object)
@@ -27,6 +33,17 @@ abstract class AbstractTypeService
         $this->code = $code;
     }
 
-    abstract public function send($target, $code);
+    public function updateSendStats()
+    {
+        $this->object->send_count++;
+        $this->object->save();
+    }
+
+    public function updateTryStats()
+    {
+
+    }
+
+    abstract public function send();
 
 }

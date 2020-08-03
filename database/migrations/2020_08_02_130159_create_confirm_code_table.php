@@ -17,7 +17,6 @@ class CreateConfirmCodeTable extends Migration
             $table->id();
             $table->string('code')->comment('Код активации');
             $table->boolean('is_active')->default(true)->comment('Активный?');
-            $table->timestamp('valid_to')->comment('Дествителен до');
             $table->timestamps();
 
             $table->foreignId('object_id')->constrained('confirm_object');

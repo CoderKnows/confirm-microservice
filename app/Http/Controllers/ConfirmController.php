@@ -32,6 +32,36 @@ class ConfirmController extends Controller
                 'string',
                 sprintf('required_without_all:%s', implode(',', ConfirmType::listTypesWithout([ConfirmType::listTypesAll()[ConfirmType::PHONE]]))),
             ],
+        ]);
+
+        $queryData = $request->all();
+
+        try {
+            /** @var ConfirmService $service */
+            $service = app()->get(ConfirmService::class);
+
+            /** @var AbstractTypeService $typeService */
+            $typeService = $service->getVerifyingService($queryData);
+            $typeService->send();
+            $typeService->updateSendStats();
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'failed', 'message' => $e->getMessage()]);
+        }
+
+        return response()->json(['status' => 'success', 'version' => app()->version()]);
+    }
+
+    public function checkCode(Request $request)
+    {
+        $this->validate($request, [
+            'email' => [
+                'email',
+                sprintf('required_without_all:%s', implode(',', ConfirmType::listTypesWithout([ConfirmType::listTypesAll()[ConfirmType::EMAIL]]))),
+            ],
+            'phone' => [
+                'string',
+                sprintf('required_without_all:%s', implode(',', ConfirmType::listTypesWithout([ConfirmType::listTypesAll()[ConfirmType::PHONE]]))),
+            ],
             'code' => ['string', Rule::exists(Code::class, 'code')]
         ]);
 
@@ -39,22 +69,7 @@ class ConfirmController extends Controller
 
         /** @var ConfirmService $service */
         $service = app()->get(ConfirmService::class);
-        if ($service->forConfirming($queryData)) {
-            $service->confirm($queryData);
-        } else {
-            /** @var AbstractTypeService $typeService */
-            $typeService = $service->getVerifyingService($queryData);
-            dd($typeService);
+        $service->confirm($queryData);
 
-            //$typeService->send();
-        }
-
-
-
-        if (! $typeService instanceof AbstractTypeService) {
-            return response()->json(['status' => 'success', 'version' => app()->version()]);
-        }
-
-        return response()->json(['status' => 'success', 'version' => app()->version()]);
     }
 }
